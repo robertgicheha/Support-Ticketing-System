@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler')
-const bcrypt = require('bcrypt.js')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 const User = require('../models/userModel')
 
@@ -14,7 +15,7 @@ const registerUser = asyncHandler(async (req, res) => {
   //Validation
   if (!name || !email || !password) {
     res.status(400)
-    throw new Error('Please include all the fields')
+    throw new error('Please include all the fields')
   }
 
   //Find if user already exists
@@ -22,8 +23,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
   if (userExists) {
     res.status(400)
-
-    throw new Error('User Already exists')
+    throw new Error('User already exists')
   }
 
   //Hash Password
@@ -38,16 +38,16 @@ const registerUser = asyncHandler(async (req, res) => {
     password: hashedPassword,
   })
 
-  if(user){
+  if (user) {
     res.status(201).json({
       _id: user._id,
       name: user.name,
-      email: user.email
+      email: user.email,
+      token: generateToken(user._id),
     })
-
-  }else{
+  } else {
     res.status(400)
-    throw new Error('Invalid User Data')
+    throw new error('Invalid User Data')
   }
 })
 
@@ -55,8 +55,33 @@ const registerUser = asyncHandler(async (req, res) => {
 //@router /api/users/login
 //@access Public
 const loginUser = asyncHandler(async (req, res) => {
-  res.send('Login Route')
+  const { email, password } = req.body
+
+  const user = await User.findOne({ email })
+
+  // Check if user and password
+  if (user && (await bcrypt.compare(password, user.password))) {
+    if (user) {
+      res.status(201).json({
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        token: generateToken(user._id),
+      })
+    } else {
+      res.status(401)
+      throw new Error('Invalid Credentials')
+    }
+  }
 })
+
+//Generate Token
+
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, {
+    expiresIn: '30d',
+  })
+}
 
 module.exports = {
   registerUser,
