@@ -1,6 +1,10 @@
 import { useSelector, useDispatch } from 'react-redux'
 import { getTicket, closeTicket } from '../features/tickets/ticketSlice'
-import { getNotes } from '../features/notes/noteSlice'
+import {
+  getNotes,
+  createNote,
+  reset as notesReset,
+} from '../features/notes/noteSlice'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
@@ -9,7 +13,6 @@ import { FaPlus } from 'react-icons/fa'
 import BackButton from '../components/BackButton'
 import Spinner from '../components/Spinner'
 import NoteItem from './NoteItem'
-import e from 'express'
 
 const customStyles = {
   content: {
@@ -66,10 +69,10 @@ function Ticket() {
   const closeModal = () => setModalIsOpen(false)
 
   //Note Submit
-
   const onNoteSubmit = (e) => {
     e.preventDefault()
-    console.log('Submit')
+    dispatch(createNote({ noteText, ticketId }))
+    // console.log('Submit')
     closeModal()
   }
 
